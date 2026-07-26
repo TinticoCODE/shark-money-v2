@@ -187,7 +187,7 @@ model CreditCard {
   usedBalance               Decimal  @default(0) @db.Decimal(19, 4)
   cutoffDay                 Int
   paymentDueOffsetDays      Int
-  interestRateMonthly       Decimal  @db.Decimal(19, 4)
+  interestRateMonthly       Decimal  @db.Decimal(19, 6)
   allowedInterestFreeMonths Int[]
   colorHex                  String?
   imageUrl                  String?

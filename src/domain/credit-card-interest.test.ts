@@ -1,3 +1,4 @@
+import Decimal from "decimal.js";
 import { describe, expect, it } from "vitest";
 import {
   generateCreditCardInstallments,
@@ -60,6 +61,43 @@ describe("credit-card-interest", () => {
         0,
       ),
     ).toBeCloseTo(1000000 + installments.reduce((s, i) => s + Number(i.interestAmount), 0), 0);
+  });
+
+  it("regresión: 28.78 sin normalizar (percentage como decimal) produce interés absurdo", () => {
+    const installments = generateCreditCardInstallments({
+      purchaseAmount: "1000000",
+      purchaseDate: new Date("2026-03-10T12:00:00.000Z"),
+      installmentsCount: 2,
+      allowedInterestFreeMonths: [3, 6, 9],
+      interestRateMonthly: "28.78",
+      cutoffDay: 15,
+      timezone: TZ,
+    });
+
+    const firstInterest = installments[0]?.interestAmount ?? new Decimal(0);
+    expect(firstInterest.gt(1_000_000)).toBe(true);
+  });
+
+  it("0.2878 decimal mensual produce total acotado para 1M a 2 cuotas", () => {
+    const installments = generateCreditCardInstallments({
+      purchaseAmount: "1000000",
+      purchaseDate: new Date("2026-03-10T12:00:00.000Z"),
+      installmentsCount: 2,
+      allowedInterestFreeMonths: [3, 6, 9],
+      interestRateMonthly: "0.2878",
+      cutoffDay: 15,
+      timezone: TZ,
+    });
+
+    const totalDebt = installments.reduce(
+      (sum, item) => sum.plus(item.principalAmount).plus(item.interestAmount),
+      new Decimal(0),
+    );
+
+    expect(totalDebt.lt(3_500_000)).toBe(true);
+    expect(
+      installments.reduce((sum, item) => sum.plus(item.principalAmount), new Decimal(0)).toString(),
+    ).toBe("1000000");
   });
 
   it("tasa cero fuera de MSI reparte capital sin interés", () => {

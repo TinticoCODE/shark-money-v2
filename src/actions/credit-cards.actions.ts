@@ -4,7 +4,8 @@ import { z } from "zod";
 import { requireAuthSession, runAction } from "@/actions/helpers/action-handler";
 import type { ActionResult } from "@/types/action-result";
 import * as creditCardService from "@/services/credit-card.service";
-import { idSchema, moneySchema, optionalMoneySchema } from "@/validators/common";
+import { idSchema, moneySchema } from "@/validators/common";
+import { creditCardMonthlyRatePercentSchema } from "@/validators/credit-card";
 
 const createCreditCardSchema = z.object({
   name: z.string().trim().min(1),
@@ -13,7 +14,7 @@ const createCreditCardSchema = z.object({
   creditLimit: moneySchema,
   cutoffDay: z.number().int().min(1).max(31),
   paymentDueOffsetDays: z.number().int().min(0).max(60),
-  interestRateMonthly: optionalMoneySchema,
+  interestRateMonthly: creditCardMonthlyRatePercentSchema.optional().default("0"),
   allowedInterestFreeMonths: z.array(z.number().int().min(1).max(48)).default([]),
   colorHex: z.string().trim().optional().nullable(),
   imageUrl: z.string().url().optional().nullable().or(z.literal("")),
@@ -67,7 +68,7 @@ export async function createCreditCardAction(
     return creditCardService.createCreditCard({
       ...parsed,
       imageUrl: parsed.imageUrl || null,
-      interestRateMonthly: parsed.interestRateMonthly ?? "0",
+      interestRateMonthly: parsed.interestRateMonthly,
     });
   });
 }

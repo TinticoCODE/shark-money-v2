@@ -27,6 +27,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { creditCardDebtLabels, formatCurrency } from "@/lib/format-display";
+import { CREDIT_CARD_CYCLE_APPROXIMATION_NOTE } from "@/features/credit-cards/credit-card-cycle-note";
 
 import type * as creditCardService from "@/services/credit-card.service";
 
@@ -177,6 +178,25 @@ export function CreditCardDetailView({ cardId }: CreditCardDetailViewProps) {
             </p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mb-6 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-950 dark:text-amber-100">
+        <p className="font-medium">Ciclo de facturación (aproximación)</p>
+        <p className="mt-1 text-muted-foreground">{CREDIT_CARD_CYCLE_APPROXIMATION_NOTE}</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <p>
+            <span className="text-muted-foreground">Corte modelado: </span>
+            día {detail.cutoffDay}
+          </p>
+          <p>
+            <span className="text-muted-foreground">Próximo corte: </span>
+            {new Date(detail.nextCutoffDate).toLocaleDateString("es-CO")}
+          </p>
+          <p>
+            <span className="text-muted-foreground">Pago hasta: </span>
+            {new Date(detail.paymentDueDate).toLocaleDateString("es-CO")}
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

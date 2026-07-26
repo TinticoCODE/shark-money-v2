@@ -212,8 +212,13 @@ export function CreditCardsView() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="interestRateMonthly">Tasa mensual (decimal, ej. 0.023)</Label>
-              <Input id="interestRateMonthly" name="interestRateMonthly" defaultValue="0" />
+              <Label htmlFor="interestRateMonthly">Tasa mensual (% mensual, ej. 2.878)</Label>
+              <Input
+                id="interestRateMonthly"
+                name="interestRateMonthly"
+                defaultValue="0"
+                inputMode="decimal"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="allowedInterestFreeMonths">Meses MSI (separados por coma)</Label>

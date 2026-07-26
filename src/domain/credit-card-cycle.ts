@@ -21,6 +21,9 @@ export interface CreditCardCycleSnapshot {
  *
  * - cutoffDay: día del mes (1–31) en que cierra el extracto, en timezone del usuario.
  *   Si el mes tiene menos días, se usa el último día del mes.
+ * - MVP: un solo corte fijo por tarjeta. Algunas tarjetas reales (ej. RappiCard) tienen
+ *   más de un corte al mes; el sistema no modela eso — las fechas derivadas son una
+ *   aproximación. Ver CREDIT_CARD_CYCLE_APPROXIMATION_NOTE en la UI de detalle.
  * - Ciclo de facturación identificado por (billingCycleYear, billingCycleMonth)
  *   = año y mes calendario del corte que cierra ese ciclo.
  * - Corte más reciente ya ocurrido: el cutoffDay del mes actual si hoy >= cutoffDay;
