@@ -10,6 +10,7 @@ import {
   Target,
   Wallet,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -42,13 +43,16 @@ export function AppShell({ children, currentPath }: AppShellProps) {
               Finanzas personales
             </h1>
           </div>
-          <Link
-            href="/settings"
-            className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
-            aria-label="Configuración"
-          >
-            <Settings className="h-5 w-5" />
-          </Link>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <Link
+              href="/settings"
+              className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden"
+              aria-label="Configuración"
+            >
+              <Settings className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </header>
 

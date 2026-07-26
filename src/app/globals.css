@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  color-scheme: light;
+  /* Sync with APP_BACKGROUND_COLOR in src/lib/app-theme.ts (PWA splash / theme-color). */
   --background: #f4f7f6;
   --foreground: #102a43;
   --card: #ffffff;
@@ -18,6 +22,28 @@
   --border: #d9e2ec;
   --input: #cbd5e1;
   --ring: #14b8a6;
+}
+
+.dark {
+  color-scheme: dark;
+  /* Sync with APP_DARK_BACKGROUND_COLOR in src/lib/app-theme.ts. */
+  --background: #0b1419;
+  --foreground: #e6eef2;
+  --card: #111b22;
+  --card-foreground: #e6eef2;
+  --primary: #14b8a6;
+  --primary-foreground: #042f2e;
+  --secondary: #1a2830;
+  --secondary-foreground: #cbd5e1;
+  --muted: #152028;
+  --muted-foreground: #94a3b8;
+  --accent: #0f2a40;
+  --accent-foreground: #bae6fd;
+  --destructive: #f87171;
+  --destructive-foreground: #450a0a;
+  --border: #223039;
+  --input: #2a3a45;
+  --ring: #2dd4bf;
 }
 
 @theme inline {

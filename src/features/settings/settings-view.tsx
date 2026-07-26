@@ -8,6 +8,7 @@ import {
   updateSettingsAction,
 } from "@/actions/settings.actions";
 import { AppShell } from "@/components/layout/app-shell";
+import { ThemeSetting } from "@/components/theme/theme-setting";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +74,15 @@ export function SettingsView() {
       />
 
       <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Apariencia</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ThemeSetting />
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Preferencias generales</CardTitle>
