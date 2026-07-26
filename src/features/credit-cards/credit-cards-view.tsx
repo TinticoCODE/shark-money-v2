@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   createCreditCardAction,
+  deactivateCreditCardAction,
   listCreditCardsAction,
 } from "@/actions/credit-cards.actions";
 import { AppShell } from "@/components/layout/app-shell";
@@ -56,7 +57,7 @@ export function CreditCardsView() {
 
   const loadCards = useCallback(() => {
     startTransition(async () => {
-      const result = await listCreditCardsAction(false);
+      const result = await listCreditCardsAction(true);
       if (!result.ok) {
         toast.error(result.error);
         return;
@@ -101,6 +102,18 @@ export function CreditCardsView() {
     });
   }
 
+  function handleDeactivate(id: string) {
+    startTransition(async () => {
+      const result = await deactivateCreditCardAction(id);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Tarjeta desactivada");
+      loadCards();
+    });
+  }
+
   return (
     <AppShell currentPath="/credit-cards">
       <PageHeader
@@ -126,7 +139,10 @@ export function CreditCardsView() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {cards.map((card) => (
-            <Card key={card.id} className="overflow-hidden border-border/70">
+            <Card
+              key={card.id}
+              className={`overflow-hidden border-border/70${!card.isActive ? " opacity-60" : ""}`}
+            >
               <div className="p-4" style={cardStyle(card)}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -136,9 +152,12 @@ export function CreditCardsView() {
                       <p className="text-sm opacity-90">•••• {card.lastFourDigits}</p>
                     ) : null}
                   </div>
-                  <Badge variant={debtVariant(card.debtStatus)}>
-                    {creditCardDebtLabels[card.debtStatus] ?? card.debtStatus}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-2">
+                    {!card.isActive ? <Badge variant="secondary">Inactiva</Badge> : null}
+                    <Badge variant={debtVariant(card.debtStatus)}>
+                      {creditCardDebtLabels[card.debtStatus] ?? card.debtStatus}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
                   <div>
@@ -158,9 +177,21 @@ export function CreditCardsView() {
                   <p>Sugerido sin interés: {formatCurrency(card.suggestedPaymentAmount)}</p>
                   <p>Compromiso futuro: {formatCurrency(card.futureCommitmentAmount)}</p>
                 </div>
-                <Button asChild size="sm" variant="outline" className="w-full">
-                  <Link href={`/credit-cards/${card.id}`}>Ver detalle</Link>
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button asChild size="sm" variant="outline" className="flex-1">
+                    <Link href={`/credit-cards/${card.id}`}>Ver detalle</Link>
+                  </Button>
+                  {card.isActive ? (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isPending}
+                      onClick={() => handleDeactivate(card.id)}
+                    >
+                      Desactivar
+                    </Button>
+                  ) : null}
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -292,6 +292,25 @@ export async function updateCreditCard(input: UpdateCreditCardInput) {
   return enrichCreditCard(card);
 }
 
+export async function deactivateCreditCard(id: string) {
+  return prisma.$transaction(async (tx) => {
+    const card = await tx.creditCard.findUniqueOrThrow({ where: { id } });
+
+    if (new Decimal(card.usedBalance.toString()).gt(0)) {
+      throw new Error(
+        "No se puede desactivar una tarjeta con saldo usado pendiente. Registra el pago primero.",
+      );
+    }
+
+    const updated = await tx.creditCard.update({
+      where: { id },
+      data: { isActive: false },
+    });
+
+    return serializeCreditCard(updated);
+  });
+}
+
 export async function registerCreditCardPurchase(input: RegisterCreditCardPurchaseInput) {
   const settings = await getUserSettingsOrThrow();
 

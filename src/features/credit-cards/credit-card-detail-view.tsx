@@ -131,12 +131,18 @@ export function CreditCardDetailView({ cardId }: CreditCardDetailViewProps) {
             <Button size="sm" variant="outline" asChild>
               <Link href="/credit-cards">Volver</Link>
             </Button>
-            <Button size="sm" variant="outline" onClick={() => setPurchaseOpen(true)}>
-              Compra
-            </Button>
-            <Button size="sm" onClick={() => setPaymentOpen(true)}>
-              Pagar
-            </Button>
+            {detail.isActive ? (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setPurchaseOpen(true)}>
+                  Compra
+                </Button>
+                <Button size="sm" onClick={() => setPaymentOpen(true)}>
+                  Pagar
+                </Button>
+              </>
+            ) : (
+              <Badge variant="secondary">Inactiva</Badge>
+            )}
           </div>
         }
       />

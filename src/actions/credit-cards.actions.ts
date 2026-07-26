@@ -86,6 +86,16 @@ export async function updateCreditCardAction(
   });
 }
 
+export async function deactivateCreditCardAction(
+  id: string,
+): Promise<ActionResult<Awaited<ReturnType<typeof creditCardService.deactivateCreditCard>>>> {
+  return runAction(async () => {
+    await requireAuthSession();
+    idSchema.parse(id);
+    return creditCardService.deactivateCreditCard(id);
+  });
+}
+
 export async function registerCreditCardPurchaseAction(
   input: unknown,
 ): Promise<ActionResult<Awaited<ReturnType<typeof creditCardService.registerCreditCardPurchase>>>> {
