@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AccountType {
+  CASH
+  BANK
+  DIGITAL_WALLET
+  SAVINGS
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+}
+
+enum TransactionType {
+  INCOME
+  EXPENSE
+  TRANSFER
+}
+
+enum LoanInterestType {
+  NONE
+  SIMPLE_MONTHLY
+}
+
+model UserSettings {
+  id        String   @id @default(cuid())
+  timezone  String   @default("America/Bogota")
+  currency  String   @default("COP")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Account {
+  id        String      @id @default(cuid())
+  name      String
+  type      AccountType
+  balance   Decimal     @default(0) @db.Decimal(19, 4)
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  transactions            Transaction[]     @relation("PrimaryAccount")
+  transfersFrom           Transaction[]     @relation("TransferFrom")
+  transfersTo             Transaction[]     @relation("TransferTo")
+  loansFunded             Loan[]            @relation("LoanSourceAccount")
+  loanPaymentsReceived    LoanPayment[]
+  goalContributions       GoalContribution[]
+}
+
+model Category {
+  id       String       @id @default(cuid())
+  name     String
+  type     CategoryType
+  isSystem Boolean      @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@unique([name, type])
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  type        TransactionType
+  amount      Decimal         @db.Decimal(19, 4)
+  accountId   String
+  fromAccountId String?
+  toAccountId   String?
+  categoryId  String?
+  date        DateTime
+  description String?
+  isRecurring Boolean         @default(false)
+  loanId      String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  account       Account          @relation("PrimaryAccount", fields: [accountId], references: [id], onDelete: Restrict)
+  fromAccount   Account?         @relation("TransferFrom", fields: [fromAccountId], references: [id], onDelete: Restrict)
+  toAccount     Account?         @relation("TransferTo", fields: [toAccountId], references: [id], onDelete: Restrict)
+  category      Category?        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  loan          Loan?            @relation("LoanDisbursement", fields: [loanId], references: [id], onDelete: Restrict)
+  loanPayment   LoanPayment?
+  goalContribution GoalContribution?
+
+  @@index([date])
+  @@index([type])
+  @@index([accountId])
+  @@index([categoryId])
+}
+
+model Loan {
+  id                   String           @id @default(cuid())
+  borrowerName         String
+  principalAmount      Decimal          @db.Decimal(19, 4)
+  outstandingPrincipal Decimal          @db.Decimal(19, 4)
+  interestRate         Decimal?         @db.Decimal(19, 4)
+  interestType         LoanInterestType @default(NONE)
+  lentAt               DateTime
+  dueDate              DateTime?
+  lastInterestAccruedAt DateTime
+  sourceAccountId      String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  sourceAccount Account       @relation("LoanSourceAccount", fields: [sourceAccountId], references: [id], onDelete: Restrict)
+  disbursement  Transaction[] @relation("LoanDisbursement")
+  payments      LoanPayment[]
+}
+
+model LoanPayment {
+  id               String   @id @default(cuid())
+  loanId           String
+  accountId        String
+  transactionId    String   @unique
+  totalAmount      Decimal  @db.Decimal(19, 4)
+  principalAmount  Decimal  @db.Decimal(19, 4)
+  interestAmount   Decimal  @db.Decimal(19, 4)
+  paidAt           DateTime
+  createdAt        DateTime @default(now())
+
+  loan        Loan        @relation(fields: [loanId], references: [id], onDelete: Restrict)
+  account     Account     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+}
+
+model Budget {
+  id                  String   @id @default(cuid())
+  categoryId          String
+  year                Int
+  month               Int
+  amount              Decimal  @db.Decimal(19, 4)
+  isRecurringTemplate Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@unique([categoryId, year, month])
+}
+
+model Goal {
+  id            String   @id @default(cuid())
+  name          String
+  targetAmount  Decimal  @db.Decimal(19, 4)
+  currentAmount Decimal  @default(0) @db.Decimal(19, 4)
+  targetDate    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  contributions GoalContribution[]
+}
+
+model GoalContribution {
+  id            String   @id @default(cuid())
+  goalId        String
+  accountId     String
+  transactionId String   @unique
+  amount        Decimal  @db.Decimal(19, 4)
+  contributedAt DateTime
+  createdAt     DateTime @default(now())
+
+  goal        Goal        @relation(fields: [goalId], references: [id], onDelete: Restrict)
+  account     Account     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+}
