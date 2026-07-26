@@ -311,6 +311,15 @@ export async function deactivateCreditCard(id: string) {
   });
 }
 
+export async function activateCreditCard(id: string) {
+  const updated = await prisma.creditCard.update({
+    where: { id },
+    data: { isActive: true },
+  });
+
+  return serializeCreditCard(updated);
+}
+
 export async function registerCreditCardPurchase(input: RegisterCreditCardPurchaseInput) {
   const settings = await getUserSettingsOrThrow();
 

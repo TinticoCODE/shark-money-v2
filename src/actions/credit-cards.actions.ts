@@ -96,6 +96,16 @@ export async function deactivateCreditCardAction(
   });
 }
 
+export async function activateCreditCardAction(
+  id: string,
+): Promise<ActionResult<Awaited<ReturnType<typeof creditCardService.activateCreditCard>>>> {
+  return runAction(async () => {
+    await requireAuthSession();
+    idSchema.parse(id);
+    return creditCardService.activateCreditCard(id);
+  });
+}
+
 export async function registerCreditCardPurchaseAction(
   input: unknown,
 ): Promise<ActionResult<Awaited<ReturnType<typeof creditCardService.registerCreditCardPurchase>>>> {

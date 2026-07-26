@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
+  activateCreditCardAction,
   createCreditCardAction,
   deactivateCreditCardAction,
   listCreditCardsAction,
@@ -114,6 +115,18 @@ export function CreditCardsView() {
     });
   }
 
+  function handleActivate(id: string) {
+    startTransition(async () => {
+      const result = await activateCreditCardAction(id);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Tarjeta activada");
+      loadCards();
+    });
+  }
+
   return (
     <AppShell currentPath="/credit-cards">
       <PageHeader
@@ -190,7 +203,16 @@ export function CreditCardsView() {
                     >
                       Desactivar
                     </Button>
-                  ) : null}
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={isPending}
+                      onClick={() => handleActivate(card.id)}
+                    >
+                      Activar
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

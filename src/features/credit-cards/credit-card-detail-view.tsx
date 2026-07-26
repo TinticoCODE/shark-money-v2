@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
+  activateCreditCardAction,
+  deactivateCreditCardAction,
   deleteCreditCardPaymentAction,
   deleteCreditCardPurchaseAction,
   getCreditCardAction,
@@ -121,6 +123,30 @@ export function CreditCardDetailView({ cardId }: CreditCardDetailViewProps) {
     });
   }
 
+  function handleDeactivate() {
+    startTransition(async () => {
+      const result = await deactivateCreditCardAction(cardId);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Tarjeta desactivada");
+      loadDetail();
+    });
+  }
+
+  function handleActivate() {
+    startTransition(async () => {
+      const result = await activateCreditCardAction(cardId);
+      if (!result.ok) {
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Tarjeta activada");
+      loadDetail();
+    });
+  }
+
   return (
     <AppShell currentPath="/credit-cards">
       <PageHeader
@@ -139,9 +165,17 @@ export function CreditCardDetailView({ cardId }: CreditCardDetailViewProps) {
                 <Button size="sm" onClick={() => setPaymentOpen(true)}>
                   Pagar
                 </Button>
+                <Button size="sm" variant="ghost" disabled={isPending} onClick={handleDeactivate}>
+                  Desactivar
+                </Button>
               </>
             ) : (
-              <Badge variant="secondary">Inactiva</Badge>
+              <>
+                <Badge variant="secondary">Inactiva</Badge>
+                <Button size="sm" variant="ghost" disabled={isPending} onClick={handleActivate}>
+                  Activar
+                </Button>
+              </>
             )}
           </div>
         }
