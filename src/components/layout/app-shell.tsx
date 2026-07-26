@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   HandCoins,
+  CreditCard,
   LayoutDashboard,
   PiggyBank,
   Receipt,
@@ -16,6 +17,7 @@ const navItems = [
   { href: "/accounts", label: "Cuentas", icon: Wallet },
   { href: "/transactions", label: "Movs.", icon: Receipt },
   { href: "/loans", label: "Prést.", icon: HandCoins },
+  { href: "/credit-cards", label: "Tarjetas", icon: CreditCard },
   { href: "/budgets", label: "Presup.", icon: PiggyBank },
   { href: "/goals", label: "Metas", icon: Target },
   { href: "/categories", label: "Categ.", icon: Tags },

@@ -106,5 +106,14 @@ export async function accountHasMovements(
     select: { id: true },
   });
 
-  return Boolean(contribution);
+  if (contribution) {
+    return true;
+  }
+
+  const creditCardPayment = await tx.creditCardPayment.findFirst({
+    where: { accountId },
+    select: { id: true },
+  });
+
+  return Boolean(creditCardPayment);
 }

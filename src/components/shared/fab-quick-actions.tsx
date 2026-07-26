@@ -1,16 +1,21 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus, TrendingDown, TrendingUp } from "lucide-react";
+import { CreditCard, Plus, TrendingDown, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface FabQuickActionsProps {
   onIncome: () => void;
   onExpense: () => void;
+  onPayCreditCard: () => void;
 }
 
-export function FabQuickActions({ onIncome, onExpense }: FabQuickActionsProps) {
+export function FabQuickActions({
+  onIncome,
+  onExpense,
+  onPayCreditCard,
+}: FabQuickActionsProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -50,6 +55,24 @@ export function FabQuickActions({ onIncome, onExpense }: FabQuickActionsProps) {
               >
                 <TrendingDown className="h-4 w-4" />
                 Registrar gasto
+              </Button>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 12, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 12, scale: 0.95 }}
+              transition={{ delay: 0.06 }}
+            >
+              <Button
+                variant="outline"
+                className="shadow-lg bg-background"
+                onClick={() => {
+                  setOpen(false);
+                  onPayCreditCard();
+                }}
+              >
+                <CreditCard className="h-4 w-4" />
+                Pagar tarjeta
               </Button>
             </motion.div>
           </>

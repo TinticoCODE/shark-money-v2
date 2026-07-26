@@ -53,6 +53,7 @@ model Account {
   loansFunded             Loan[]            @relation("LoanSourceAccount")
   loanPaymentsReceived    LoanPayment[]
   goalContributions       GoalContribution[]
+  creditCardPayments      CreditCardPayment[]
 }
 
 model Category {
@@ -65,6 +66,7 @@ model Category {
 
   transactions Transaction[]
   budgets      Budget[]
+  creditCardPurchases CreditCardPurchase[]
 
   @@unique([name, type])
 }
@@ -73,7 +75,7 @@ model Transaction {
   id          String          @id @default(cuid())
   type        TransactionType
   amount      Decimal         @db.Decimal(19, 4)
-  accountId   String
+  accountId   String?
   fromAccountId String?
   toAccountId   String?
   categoryId  String?
@@ -84,13 +86,15 @@ model Transaction {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  account       Account          @relation("PrimaryAccount", fields: [accountId], references: [id], onDelete: Restrict)
-  fromAccount   Account?         @relation("TransferFrom", fields: [fromAccountId], references: [id], onDelete: Restrict)
-  toAccount     Account?         @relation("TransferTo", fields: [toAccountId], references: [id], onDelete: Restrict)
-  category      Category?        @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  loan          Loan?            @relation("LoanDisbursement", fields: [loanId], references: [id], onDelete: Restrict)
-  loanPayment   LoanPayment?
-  goalContribution GoalContribution?
+  account            Account?             @relation("PrimaryAccount", fields: [accountId], references: [id], onDelete: Restrict)
+  fromAccount        Account?             @relation("TransferFrom", fields: [fromAccountId], references: [id], onDelete: Restrict)
+  toAccount          Account?             @relation("TransferTo", fields: [toAccountId], references: [id], onDelete: Restrict)
+  category           Category?            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  loan               Loan?                @relation("LoanDisbursement", fields: [loanId], references: [id], onDelete: Restrict)
+  loanPayment        LoanPayment?
+  goalContribution   GoalContribution?
+  creditCardPurchase CreditCardPurchase?
+  creditCardPayment  CreditCardPayment?
 
   @@index([date])
   @@index([type])
@@ -172,4 +176,92 @@ model GoalContribution {
   goal        Goal        @relation(fields: [goalId], references: [id], onDelete: Restrict)
   account     Account     @relation(fields: [accountId], references: [id], onDelete: Restrict)
   transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+}
+
+model CreditCard {
+  id                        String   @id @default(cuid())
+  name                      String
+  bankName                  String?
+  lastFourDigits            String?
+  creditLimit               Decimal  @db.Decimal(19, 4)
+  usedBalance               Decimal  @default(0) @db.Decimal(19, 4)
+  cutoffDay                 Int
+  paymentDueOffsetDays      Int
+  interestRateMonthly       Decimal  @db.Decimal(19, 4)
+  allowedInterestFreeMonths Int[]
+  colorHex                  String?
+  imageUrl                  String?
+  isActive                  Boolean  @default(true)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  purchases CreditCardPurchase[]
+  payments  CreditCardPayment[]
+}
+
+model CreditCardPurchase {
+  id                String   @id @default(cuid())
+  creditCardId      String
+  categoryId        String
+  amount            Decimal  @db.Decimal(19, 4)
+  description       String?
+  purchaseDate      DateTime
+  installmentsCount Int      @default(1)
+  isInterestFree    Boolean
+  transactionId     String   @unique
+  createdAt         DateTime @default(now())
+
+  creditCard   CreditCard              @relation(fields: [creditCardId], references: [id], onDelete: Restrict)
+  category     Category                @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  transaction  Transaction             @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  installments CreditCardInstallment[]
+
+  @@index([creditCardId, purchaseDate])
+}
+
+model CreditCardInstallment {
+  id                String  @id @default(cuid())
+  purchaseId        String
+  installmentNumber Int
+  principalAmount   Decimal @db.Decimal(19, 4)
+  interestAmount    Decimal @db.Decimal(19, 4)
+  paidAmount        Decimal @default(0) @db.Decimal(19, 4)
+  billingCycleYear  Int
+  billingCycleMonth Int
+
+  purchase CreditCardPurchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  paymentAllocations CreditCardPaymentAllocation[]
+
+  @@index([purchaseId])
+  @@index([billingCycleYear, billingCycleMonth])
+}
+
+model CreditCardPayment {
+  id            String   @id @default(cuid())
+  creditCardId  String
+  accountId     String
+  amount        Decimal  @db.Decimal(19, 4)
+  paidAt        DateTime
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+
+  creditCard  CreditCard  @relation(fields: [creditCardId], references: [id], onDelete: Restrict)
+  account     Account     @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Restrict)
+  allocations CreditCardPaymentAllocation[]
+
+  @@index([creditCardId, paidAt])
+}
+
+model CreditCardPaymentAllocation {
+  id            String  @id @default(cuid())
+  paymentId     String
+  installmentId String
+  amount        Decimal @db.Decimal(19, 4)
+
+  payment     CreditCardPayment     @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  installment CreditCardInstallment @relation(fields: [installmentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+  @@index([installmentId])
 }

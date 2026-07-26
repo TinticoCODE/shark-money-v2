@@ -7,6 +7,14 @@ const GOAL_CONTRIBUTION_ORDER = [
   { contributedAt: "desc" as const },
   { createdAt: "desc" as const },
 ];
+const CREDIT_CARD_PAYMENT_ORDER = [
+  { paidAt: "desc" as const },
+  { createdAt: "desc" as const },
+];
+const CREDIT_CARD_PURCHASE_ORDER = [
+  { purchaseDate: "desc" as const },
+  { createdAt: "desc" as const },
+];
 
 export async function assertMostRecentLoanPayment(
   tx: TransactionClient,
@@ -47,6 +55,44 @@ export async function getPreviousLoanInterestAccruedAt(
   });
 
   return previousPayment?.paidAt ?? loan.lentAt;
+}
+
+export async function assertMostRecentCreditCardPayment(
+  tx: TransactionClient,
+  paymentId: string,
+  creditCardId: string,
+): Promise<void> {
+  const latestPayment = await tx.creditCardPayment.findFirst({
+    where: { creditCardId },
+    orderBy: CREDIT_CARD_PAYMENT_ORDER,
+    select: { id: true },
+  });
+
+  if (!latestPayment || latestPayment.id !== paymentId) {
+    throw new Error(
+      "Solo puedes modificar o eliminar el pago más reciente de la tarjeta. " +
+        "Los pagos anteriores no se pueden editar ni borrar porque alterarían la asignación FIFO de cuotas y el saldo usado.",
+    );
+  }
+}
+
+export async function assertMostRecentCreditCardPurchase(
+  tx: TransactionClient,
+  purchaseId: string,
+  creditCardId: string,
+): Promise<void> {
+  const latestPurchase = await tx.creditCardPurchase.findFirst({
+    where: { creditCardId },
+    orderBy: CREDIT_CARD_PURCHASE_ORDER,
+    select: { id: true },
+  });
+
+  if (!latestPurchase || latestPurchase.id !== purchaseId) {
+    throw new Error(
+      "Solo puedes modificar o eliminar la compra más reciente de la tarjeta. " +
+        "Las compras anteriores no se pueden editar ni borrar porque alterarían las cuotas y el saldo usado.",
+    );
+  }
 }
 
 export async function assertMostRecentGoalContribution(

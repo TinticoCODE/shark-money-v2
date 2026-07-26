@@ -45,7 +45,7 @@ export async function createTransfer(input: CreateTransferInput) {
       {
         type: "TRANSFER",
         amount: input.amount,
-        accountId: transaction.accountId,
+        accountId: transaction.accountId!,
         fromAccountId: input.fromAccountId,
         toAccountId: input.toAccountId,
       },
@@ -77,7 +77,7 @@ export async function deleteTransfer(id: string) {
       {
         type: "TRANSFER",
         amount: existing.amount.toString(),
-        accountId: existing.accountId,
+        accountId: existing.accountId!,
         fromAccountId: existing.fromAccountId,
         toAccountId: existing.toAccountId,
       },

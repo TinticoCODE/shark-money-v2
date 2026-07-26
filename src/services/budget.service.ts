@@ -97,6 +97,8 @@ export async function getBudgetProgress(year: number, month: number, from: Date,
     include: {
       loanPayment: { select: { id: true } },
       goalContribution: { select: { id: true } },
+      creditCardPayment: { select: { id: true } },
+      creditCardPurchase: { select: { id: true } },
     },
   });
 
@@ -111,6 +113,8 @@ export async function getBudgetProgress(year: number, month: number, from: Date,
               loanId: transaction.loanId,
               loanPayment: transaction.loanPayment,
               goalContribution: transaction.goalContribution,
+              creditCardPayment: transaction.creditCardPayment,
+              creditCardPurchase: transaction.creditCardPurchase,
             }),
           ),
       )

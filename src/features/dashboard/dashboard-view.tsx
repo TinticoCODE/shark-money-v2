@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { toast } from "sonner";
 import { getDashboardSummaryAction } from "@/actions/dashboard.actions";
+import { getCreditCardDashboardSummaryAction } from "@/actions/credit-cards.actions";
 import { logoutAction } from "@/actions/auth.actions";
 import { AppShell } from "@/components/layout/app-shell";
 import { FabQuickActions } from "@/components/shared/fab-quick-actions";
@@ -22,30 +23,45 @@ import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CreditCardPaymentModal } from "@/features/dashboard/credit-card-payment-modal";
 import { TransactionQuickModal } from "@/features/dashboard/transaction-quick-modal";
-import { formatCurrency, healthLabels } from "@/lib/format-display";
+import { creditCardDebtLabels, formatCurrency, healthLabels } from "@/lib/format-display";
 import type * as dashboardService from "@/services/dashboard.service";
 
 type DashboardSummary = Awaited<ReturnType<typeof dashboardService.getDashboardSummary>>;
+import type * as creditCardService from "@/services/credit-card.service";
+
+type CreditCardDashboard = Awaited<
+  ReturnType<typeof creditCardService.getCreditCardDashboardSummary>
+>;
 
 const CHART_COLORS = ["#0f766e", "#0284c7", "#7c3aed", "#db2777", "#ea580c", "#65a30d"];
 
 export function DashboardView() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
+  const [creditCards, setCreditCards] = useState<CreditCardDashboard | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [quickType, setQuickType] = useState<"INCOME" | "EXPENSE" | null>(null);
+  const [payCardOpen, setPayCardOpen] = useState(false);
   const [, startTransition] = useTransition();
 
   const loadSummary = useCallback(() => {
     startTransition(async () => {
-      const result = await getDashboardSummaryAction();
-      if (!result.ok) {
-        setLoadError(result.error);
-        toast.error(result.error);
+      const [summaryResult, cardsResult] = await Promise.all([
+        getDashboardSummaryAction(),
+        getCreditCardDashboardSummaryAction(),
+      ]);
+
+      if (!summaryResult.ok) {
+        setLoadError(summaryResult.error);
+        toast.error(summaryResult.error);
         return;
       }
+      if (cardsResult.ok) {
+        setCreditCards(cardsResult.data);
+      }
       setLoadError(null);
-      setSummary(result.data);
+      setSummary(summaryResult.data);
     });
   }, []);
 
@@ -62,6 +78,12 @@ export function DashboardView() {
         <FabQuickActions
           onIncome={() => setQuickType("INCOME")}
           onExpense={() => setQuickType("EXPENSE")}
+          onPayCreditCard={() => setPayCardOpen(true)}
+        />
+        <CreditCardPaymentModal
+          open={payCardOpen}
+          onOpenChange={setPayCardOpen}
+          onSuccess={loadSummary}
         />
         <TransactionQuickModal
           open={quickType !== null}
@@ -136,6 +158,50 @@ export function DashboardView() {
           </CardContent>
         </Card>
       </div>
+
+      {creditCards && creditCards.activeDebts.length > 0 ? (
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Deudas activas (tarjetas)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {creditCards.activeDebts.map((card) => (
+                <div
+                  key={card.id}
+                  className="flex items-center justify-between rounded-lg border border-border/70 p-3"
+                >
+                  <div>
+                    <p className="font-medium">{card.name}</p>
+                    <Badge variant="secondary">
+                      {creditCardDebtLabels[card.debtStatus] ?? card.debtStatus}
+                    </Badge>
+                  </div>
+                  <div className="text-right text-sm">
+                    <p className="font-semibold">{formatCurrency(card.usedBalance, summary.currency)}</p>
+                    <p className="text-muted-foreground">
+                      Pagar: {formatCurrency(card.suggestedPaymentAmount, summary.currency)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Compromiso futuro tarjetas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold">
+                {formatCurrency(creditCards.totalFutureCommitment, summary.currency)}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Cuotas MSI y con interés pendientes; no duplica los gastos reales del mes.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      ) : null}
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -245,6 +311,13 @@ export function DashboardView() {
       <FabQuickActions
         onIncome={() => setQuickType("INCOME")}
         onExpense={() => setQuickType("EXPENSE")}
+        onPayCreditCard={() => setPayCardOpen(true)}
+      />
+
+      <CreditCardPaymentModal
+        open={payCardOpen}
+        onOpenChange={setPayCardOpen}
+        onSuccess={loadSummary}
       />
 
       <TransactionQuickModal

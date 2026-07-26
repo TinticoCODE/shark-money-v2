@@ -44,7 +44,7 @@ function serializeTransaction(transaction: {
   id: string;
   type: TransactionType;
   amount: { toString(): string };
-  accountId: string;
+  accountId: string | null;
   fromAccountId: string | null;
   toAccountId: string | null;
   categoryId: string | null;
@@ -133,7 +133,7 @@ export async function createTransaction(input: CreateTransactionInput) {
       {
         type: transaction.type,
         amount: input.amount,
-        accountId: transaction.accountId,
+        accountId: transaction.accountId!,
       },
       1,
     );
@@ -149,8 +149,19 @@ export async function updateTransaction(input: UpdateTransactionInput) {
       include: transactionClassificationInclude,
     });
 
-    if (existing.type === "TRANSFER" || existing.loanId || existing.loanPayment || existing.goalContribution) {
+    if (
+      existing.type === "TRANSFER" ||
+      existing.loanId ||
+      existing.loanPayment ||
+      existing.goalContribution ||
+      existing.creditCardPurchase ||
+      existing.creditCardPayment
+    ) {
       throw new Error("Esta transacción debe editarse desde su módulo correspondiente");
+    }
+
+    if (!existing.accountId) {
+      throw new Error("La transacción no tiene cuenta asociada");
     }
 
     await applyTransactionBalances(
@@ -166,6 +177,9 @@ export async function updateTransaction(input: UpdateTransactionInput) {
     const nextType = input.type ?? existing.type;
     const nextAmount = input.amount ?? existing.amount.toString();
     const nextAccountId = input.accountId ?? existing.accountId;
+    if (!nextAccountId) {
+      throw new Error("La transacción requiere una cuenta válida");
+    }
     const nextCategoryId = input.categoryId ?? existing.categoryId;
 
     if (nextType !== "INCOME" && nextType !== "EXPENSE") {
@@ -212,7 +226,7 @@ export async function updateTransaction(input: UpdateTransactionInput) {
       {
         type: updated.type,
         amount: nextAmount,
-        accountId: updated.accountId,
+        accountId: updated.accountId!,
       },
       1,
     );
@@ -228,8 +242,19 @@ export async function deleteTransaction(id: string) {
       include: transactionClassificationInclude,
     });
 
-    if (existing.type === "TRANSFER" || existing.loanId || existing.loanPayment || existing.goalContribution) {
+    if (
+      existing.type === "TRANSFER" ||
+      existing.loanId ||
+      existing.loanPayment ||
+      existing.goalContribution ||
+      existing.creditCardPurchase ||
+      existing.creditCardPayment
+    ) {
       throw new Error("Esta transacción debe eliminarse desde su módulo correspondiente");
+    }
+
+    if (!existing.accountId) {
+      throw new Error("La transacción no tiene cuenta asociada");
     }
 
     await applyTransactionBalances(

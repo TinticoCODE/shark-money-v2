@@ -5,6 +5,8 @@ export interface TransactionForClassification {
   loanId: string | null;
   loanPayment: { id: string } | null;
   goalContribution: { id: string } | null;
+  creditCardPayment: { id: string } | null;
+  creditCardPurchase: { id: string } | null;
 }
 
 /**
@@ -15,6 +17,11 @@ export interface TransactionForClassification {
  * - Transacciones con loanId: desembolso de préstamo (sale de una cuenta pero no es gasto real).
  * - Transacciones vinculadas a LoanPayment: abono recibido (entra a cuenta pero no es ingreso real).
  * - Transacciones vinculadas a GoalContribution: aporte a meta (sale de cuenta pero no es gasto real).
+ * - Transacciones vinculadas a CreditCardPayment: pago de tarjeta (sale de cuenta pero no es gasto real;
+ *   la compra ya se contó como gasto en la fecha de la compra).
+ *
+ * NO excluidas:
+ * - CreditCardPurchase: el EXPENSE de la compra sí es gasto real del mes de la compra.
  */
 export function isExcludedFromRealCashflow(
   transaction: TransactionForClassification,
@@ -32,6 +39,10 @@ export function isExcludedFromRealCashflow(
   }
 
   if (transaction.goalContribution !== null) {
+    return true;
+  }
+
+  if (transaction.creditCardPayment !== null) {
     return true;
   }
 

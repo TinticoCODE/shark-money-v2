@@ -206,6 +206,8 @@ async function buildCategoryAnomalySnapshots(
     loanId: string | null;
     loanPayment: { id: string } | null;
     goalContribution: { id: string } | null;
+    creditCardPayment: { id: string } | null;
+    creditCardPurchase: { id: string } | null;
     category: { id: string; name: string } | null;
   }>,
   monthStart: Date,

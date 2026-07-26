@@ -6,6 +6,10 @@ export function toDecimal(value: MoneyInput): Decimal {
   return value instanceof Decimal ? value : new Decimal(value);
 }
 
+export function roundMoney(value: MoneyInput): Decimal {
+  return toDecimal(value).toDecimalPlaces(4, Decimal.ROUND_HALF_UP);
+}
+
 export function sumMoney(values: MoneyInput[]): Decimal {
   return values.reduce<Decimal>(
     (acc, value) => acc.plus(toDecimal(value)),

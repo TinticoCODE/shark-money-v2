@@ -32,3 +32,9 @@ export const healthLabels: Record<string, string> = {
   FAIR: "Regular",
   AT_RISK: "En riesgo",
 };
+
+export const creditCardDebtLabels: Record<string, string> = {
+  SIN_DEUDA: "Sin deuda",
+  DEUDA_SIN_INTERES: "Deuda sin interés",
+  DEUDA_CON_INTERES: "Deuda con interés",
+};
